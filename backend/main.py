@@ -17,11 +17,11 @@ FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 
 # Initialize Firebase Admin SDK
 try:
-    cred_path = os.path.join(os.path.dirname(__file__), "firebase_config.json")
+    cred_path = os.path.join(os.path.dirname(_file_), "firebase_config.json")
     cred = credentials.Certificate(cred_path)
     firebase_admin.initialize_app(cred)
 except Exception as e:
-    print("\u26a0 Firebase initialization failed:", str(e))
+    print("⚠ Firebase initialization failed:", str(e))
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -36,8 +36,7 @@ app.add_middleware(
 )
 
 # Hugging Face FLAN-T5 model
-chatbot_pipeline = pipeline("text2text-generation", model="google/flan-t5-base")
-
+chatbot_pipeline = pipeline("text2text-generation", model="google/flan-t5-small")
 
 # -------------------- Pydantic Models -------------------- #
 class ChatRequest(BaseModel):
@@ -57,7 +56,7 @@ def signup_user(user: UserAuthRequest):
         res.raise_for_status()
         return {"message": "✅ User created successfully", "data": res.json()}
     except requests.exceptions.HTTPError as e:
-        raise HTTPException(status_code=res.status_code, detail=res.json().get("error", {}).get("message", "Unknown error"))
+        return HTTPException(status_code=res.status_code, detail=res.json().get("error", {}).get("message", "Unknown error"))
 
 @app.post("/login")
 def login_user(user: UserAuthRequest):
@@ -68,7 +67,7 @@ def login_user(user: UserAuthRequest):
         res.raise_for_status()
         return {"message": "✅ Login successful", "data": res.json()}
     except requests.exceptions.HTTPError as e:
-        raise HTTPException(status_code=res.status_code, detail=res.json().get("error", {}).get("message", "Unknown error"))
+        return HTTPException(status_code=res.status_code, detail=res.json().get("error", {}).get("message", "Unknown error"))
 
 # -------------------- Helper Functions -------------------- #
 def extract_job_details(message):
@@ -139,8 +138,9 @@ irrelevant_keywords = [
     "love", "boyfriend", "girlfriend", "crush", "pet", "dog", "cat", "shopping", "dress",
     "makeup", "skincare", "hair", "fitness", "gym", "weight loss", "horoscope", "zodiac", "astrology",
     "festival", "holiday", "vacation", "travel", "trip", "game", "video game", "YouTube", "TikTok",
-    "Instagram", "Snapchat", "Facebook", "reels", "memes"
+    "Instagram", "Snapchat", "Facebook", "reels", "memes" 
 ]
+
 
 def is_thank_you(message):
     return any(thank in message.lower() for thank in thank_you_variants)
